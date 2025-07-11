@@ -1,43 +1,61 @@
 import { FC, useMemo } from 'react';
-import { TConstructorIngredient } from '@utils-types';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { TConstructorIngredient, TOrder } from '@utils-types';
 import { BurgerConstructorUI } from '@ui';
 
+import { useAppSelector } from '../../services/hooks/hooks';
+import { addOrder, clearOrder } from '../../services/reducers/ordersSlice';
+
 export const BurgerConstructor: FC = () => {
-  /** TODO: взять переменные constructorItems, orderRequest и orderModalData из стора */
-  const constructorItems = {
-    bun: {
-      price: 0
-    },
-    ingredients: []
-  };
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const orderRequest = false;
-
-  const orderModalData = null;
+  const bun = useAppSelector((state) => state.burgerConstructor?.bun ?? null);
+  const ingredients = useAppSelector(
+    (state) => state.burgerConstructor?.ingredients ?? []
+  );
+  const orderRequest = useAppSelector(
+    (state) => state.burgerConstructor.orderRequest
+  );
 
   const onOrderClick = () => {
-    if (!constructorItems.bun || orderRequest) return;
+    if (!bun || orderRequest) return;
+
+    const newOrder: TOrder = {
+      _id: Math.random().toString(36).substring(2, 15),
+      number: Math.floor(Math.random() * 100000),
+      name: 'идентификатор заказа',
+      status: 'Ваш заказ начали готовить',
+      ingredients: [bun, ...ingredients, bun].map((item) => item._id),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    dispatch(addOrder(newOrder));
+    navigate(`/order/${newOrder.number}`);
   };
-  const closeOrderModal = () => {};
+
+  const closeOrderModal = () => {
+    dispatch(clearOrder()); // очистка orderModalData
+  };
 
   const price = useMemo(
     () =>
-      (constructorItems.bun ? constructorItems.bun.price * 2 : 0) +
-      constructorItems.ingredients.reduce(
+      (bun ? bun.price * 2 : 0) +
+      ingredients.reduce(
         (s: number, v: TConstructorIngredient) => s + v.price,
         0
       ),
-    [constructorItems]
+    [bun, ingredients]
   );
-
-  return null;
 
   return (
     <BurgerConstructorUI
       price={price}
       orderRequest={orderRequest}
-      constructorItems={constructorItems}
-      orderModalData={orderModalData}
+      constructorItems={{ bun, ingredients }}
+      orderModalData={null}
       onOrderClick={onOrderClick}
       closeOrderModal={closeOrderModal}
     />

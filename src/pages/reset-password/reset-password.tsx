@@ -1,39 +1,42 @@
 import { FC, SyntheticEvent, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-import { resetPasswordApi } from '@api';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { resetPasswordApi } from '../../utils/burger-api';
 import { ResetPasswordUI } from '@ui-pages';
 
 export const ResetPassword: FC = () => {
-  const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [token, setToken] = useState('');
   const [error, setError] = useState<Error | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const queryToken = new URLSearchParams(location.search).get('token');
+    if (!localStorage.getItem('resetPassword') || !queryToken) {
+      navigate('/forgot-password', { replace: true });
+    } else {
+      setToken(queryToken);
+    }
+  }, [location.search, navigate]);
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
-    setError(null);
+
     resetPasswordApi({ password, token })
       .then(() => {
         localStorage.removeItem('resetPassword');
-        navigate('/login');
+        navigate('/login', { replace: true });
       })
       .catch((err) => setError(err));
   };
-
-  useEffect(() => {
-    if (!localStorage.getItem('resetPassword')) {
-      navigate('/forgot-password', { replace: true });
-    }
-  }, [navigate]);
 
   return (
     <ResetPasswordUI
       errorText={error?.message}
       password={password}
       token={token}
-      setPassword={setPassword}
       setToken={setToken}
+      setPassword={setPassword}
       handleSubmit={handleSubmit}
     />
   );
