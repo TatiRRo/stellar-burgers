@@ -1,34 +1,25 @@
-// import { Preloader } from '@ui';
-// import { FeedUI } from '@ui-pages';
-// import { TOrder } from '@utils-types';
-// import { FC } from 'react';
-
-// export const Feed: FC = () => {
-//   /** TODO: взять переменную из стора */
-//   const orders: TOrder[] = [];
-
-//   if (!orders.length) {
-//     return <Preloader />;
-//   }
-
-//   <FeedUI orders={orders} handleGetFeeds={() => {}} />;
-// };
-
-import { useEffect } from 'react';
+import { FC, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../services/hooks/hooks';
-import { fetchOrders, fetchFeeds } from '../../services/reducers/ordersSlice';
-import { FeedUI } from '../../components/ui/pages/feed/feed';
+import { fetchFeeds } from '../../services/reducers/ordersSlice';
+import { FeedUI } from '@ui-pages';
+import { Preloader } from '@ui';
 
-export const Feed = () => {
-  const dispatch = useAppDispatch(); // ✅ типизированный
-  const { orders } = useAppSelector((state) => state.orders);
+export const Feed: FC = () => {
+  const dispatch = useAppDispatch();
+  const { orders, loading, error } = useAppSelector((state) => state.orders);
 
   useEffect(() => {
-    dispatch(fetchOrders());
     dispatch(fetchFeeds());
   }, [dispatch]);
 
+  if (loading) {
+    return <Preloader />;
+  }
+  if (error) {
+    return <p style={{ color: 'red' }}>Ошибка: {error}</p>;
+  }
+
   return (
-    <FeedUI orders={orders} handleGetFeeds={() => dispatch(fetchOrders())} />
+    <FeedUI orders={orders} handleGetFeeds={() => dispatch(fetchFeeds())} />
   );
 };

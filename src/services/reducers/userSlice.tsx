@@ -1,25 +1,49 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { getUserApi } from '../../utils/burger-api';
+import { getUserApi, updateUserApi } from '../../utils/burger-api';
 import { TUser } from '../../utils/types';
 
 type UserState = {
   user: TUser | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  updateStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
+  updateError: string | null;
 };
 
 const initialState: UserState = {
   user: null,
   status: 'idle',
-  error: null
+  updateStatus: 'idle',
+  error: null,
+  updateError: null
 };
 
-export const getUser = createAsyncThunk('user/getUser', async (_, thunkAPI) => {
+export const getUser = createAsyncThunk<TUser, void, { rejectValue: string }>(
+  'user/getUser',
+  async (_, thunkAPI) => {
+    try {
+      const response = await getUserApi();
+      return response.user;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.message || 'Не удалось загрузить пользователя'
+      );
+    }
+  }
+);
+
+export const updateUser = createAsyncThunk<
+  TUser,
+  Partial<TUser & { password?: string }>,
+  { rejectValue: string }
+>('user/updateUser', async (userData, thunkAPI) => {
   try {
-    const response = await getUserApi();
+    const response = await updateUserApi(userData);
     return response.user;
   } catch (error: any) {
-    return thunkAPI.rejectWithValue(error.message || 'Failed to fetch user');
+    return thunkAPI.rejectWithValue(
+      error.message || 'Не удалось обновить данные пользователя'
+    );
   }
 });
 
@@ -29,6 +53,10 @@ const userSlice = createSlice({
   reducers: {
     clearUser(state) {
       state.user = null;
+      state.status = 'idle';
+      state.updateStatus = 'idle';
+      state.error = null;
+      state.updateError = null;
     }
   },
   extraReducers: (builder) => {
@@ -43,12 +71,24 @@ const userSlice = createSlice({
       })
       .addCase(getUser.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload as string;
+        state.error = action.payload || 'Неизвестная ошибка';
         state.user = null;
+      })
+
+      .addCase(updateUser.pending, (state) => {
+        state.updateStatus = 'loading';
+        state.updateError = null;
+      })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.updateStatus = 'succeeded';
+        state.user = action.payload;
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.updateStatus = 'failed';
+        state.updateError = action.payload || 'Неизвестная ошибка';
       });
   }
 });
 
 export const { clearUser } = userSlice.actions;
-
 export default userSlice.reducer;

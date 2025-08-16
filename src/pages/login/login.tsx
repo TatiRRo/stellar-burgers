@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LoginUI } from '@ui-pages';
 import { loginUserApi } from '../../utils/burger-api';
 import { setCookie } from '../../utils/cookie';
+import { getUser } from '../../services/reducers/userSlice';
+import { useAppDispatch } from '../../services/hooks/hooks';
 
 export const Login: FC = () => {
   const [email, setEmail] = useState('');
@@ -10,8 +12,9 @@ export const Login: FC = () => {
   const [errorText, setErrorText] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useAppDispatch();
 
-  const from = (location.state?.from?.pathname as string) || '/profile';
+  const from = (location.state?.from?.pathname as string) || '/';
 
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
@@ -20,6 +23,8 @@ export const Login: FC = () => {
       const res = await loginUserApi({ email, password });
       localStorage.setItem('refreshToken', res.refreshToken);
       setCookie('accessToken', res.accessToken);
+
+      await dispatch(getUser());
       navigate(from, { replace: true });
     } catch (err: any) {
       setErrorText(err.message || 'Ошибка входа');

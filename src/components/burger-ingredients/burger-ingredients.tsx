@@ -5,8 +5,7 @@ import { TTabMode } from '@utils-types';
 import { BurgerIngredientsUI } from '../ui/burger-ingredients';
 import { TIngredient } from '@utils-types';
 
-import { useAppDispatch, useAppSelector } from '../../services/hooks/hooks';
-import { fetchIngredients } from '../../services/reducers/ingredientsSlice';
+import { useAppSelector } from '../../services/hooks/hooks';
 
 export const BurgerIngredients: FC = () => {
   const { items, isLoading, hasError } = useAppSelector(

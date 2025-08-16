@@ -1,9 +1,8 @@
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 import { ConstructorPage } from '../../pages/constructor-page/constructor-page';
 import { AppHeader } from '../app-header/app-header';
-
-import { FeedInfo } from '../feed-info/feed-info';
 import { Login } from '../../pages/login/login';
 import { Register } from '../../pages/register/register';
 import { ForgotPassword } from '../../pages/forgot-password/forgot-password';
@@ -15,25 +14,20 @@ import { OrderInfo } from '../order-info/order-info';
 import { IngredientDetails } from '../ingredient-details/ingredient-details';
 import { Modal } from '../modal/modal';
 import { ProtectedRoute } from '../protected-route/protected-route';
-import { useEffect } from 'react';
 import { useAppDispatch } from '../../services/hooks/hooks';
 import { IngredientDetailPage } from '../../pages/ingredient-details/ingredient-details';
-import { useAppSelector } from '../../services/hooks/hooks';
-
 import { OrderDetailsPage } from '../../pages/order-details/order-details';
-import { OrdersList } from '../../components/orders-list/orders-list';
 import { Feed } from '../../pages/feed/feed';
 
 import { fetchIngredients } from '../../services/reducers/ingredientsSlice';
 import { getUser } from '../../services/reducers/userSlice';
+import { OrderInfoPage } from '../../pages/order-info/order-info';
 
 const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const orders = useAppSelector((state) => state.orders.orders);
-
-  const background = location.state?.background;
+  const background = location.state && location.state.background;
 
   const closeModal = () => {
     navigate(-1);
@@ -49,19 +43,29 @@ const App = () => {
     <>
       <AppHeader />
       <Routes location={background || location}>
-        <Route path='/' element={<ConstructorPage />} />
-        <Route path='/ingredients/:id' element={<IngredientDetailPage />} />
-        <Route path='/order/:number' element={<OrderDetailsPage />} />
-        <Route path='/feed' element={<Feed />} />
-        <Route path='/login' element={<Login />} />
         <Route
-          path='/profile'
+          path='/'
           element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
+            // <div> для того чтобы Reconciller не выбрасывал ошибку
+            <div>
+              <ConstructorPage />
+            </div>
           }
         />
+        <Route path='/ingredients/:id' element={<IngredientDetailPage />} />
+        <Route path='/order/:number' element={<OrderDetailsPage />} />
+        <Route path='/profile/orders/:number' element={<OrderInfoPage />} />
+        <Route
+          path='/feed'
+          element={
+            // <div> для того чтобы Reconciller не выбрасывал ошибку
+            <div>
+              <Feed />
+            </div>
+          }
+        />
+        <Route path='/feed/:number' element={<OrderInfoPage />} />
+        <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />
         <Route path='/forgot-password' element={<ForgotPassword />} />
         <Route path='/reset-password' element={<ResetPassword />} />
@@ -69,7 +73,9 @@ const App = () => {
           path='/profile'
           element={
             <ProtectedRoute>
-              <Profile />
+              <div>
+                <Profile />
+              </div>
             </ProtectedRoute>
           }
         />

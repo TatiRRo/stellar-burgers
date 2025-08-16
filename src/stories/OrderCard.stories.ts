@@ -63,7 +63,7 @@ export const DefaultOrderCard: Story = {
       ],
       remains: 2,
       total: 2,
-      date: new Date('2024-01-25'),
+      //   date: new Date('2024-01-25'),
       _id: '32',
       status: 'ready',
       name: 'Начинка',

@@ -1,43 +1,55 @@
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { TConstructorIngredient, TOrder } from '@utils-types';
+import { TConstructorIngredient } from '@utils-types';
 import { BurgerConstructorUI } from '@ui';
-
 import { useAppSelector } from '../../services/hooks/hooks';
 import { addOrder, clearOrder } from '../../services/reducers/ordersSlice';
+import { orderBurgerApi } from '../../utils/burger-api';
+import { TOrder } from '@utils-types';
+import { getCookie } from '../../../src/utils/cookie';
 
 export const BurgerConstructor: FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isAuthenticated = (): boolean => !!getCookie('accessToken');
 
   const bun = useAppSelector((state) => state.burgerConstructor?.bun ?? null);
   const ingredients = useAppSelector(
     (state) => state.burgerConstructor?.ingredients ?? []
   );
-  const orderRequest = useAppSelector(
-    (state) => state.burgerConstructor.orderRequest
-  );
 
-  const onOrderClick = () => {
+  const [orderRequest, setOrderRequest] = useState(false);
+  const [orderModalData, setOrderModalData] = useState<TOrder | null>(null);
+
+  const onOrderClick = async () => {
+    if (!isAuthenticated()) {
+      navigate('/login');
+      return;
+    }
+
     if (!bun || orderRequest) return;
 
-    const newOrder: TOrder = {
-      _id: Math.random().toString(36).substring(2, 15),
-      number: Math.floor(Math.random() * 100000),
-      name: 'идентификатор заказа',
-      status: 'Ваш заказ начали готовить',
-      ingredients: [bun, ...ingredients, bun].map((item) => item._id),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    const ingredientIds = [bun, ...ingredients, bun].map((item) => item._id);
 
-    dispatch(addOrder(newOrder));
-    navigate(`/order/${newOrder.number}`);
+    try {
+      setOrderRequest(true);
+
+      const data = await orderBurgerApi(ingredientIds);
+      setOrderModalData(data.order);
+      dispatch(addOrder(data.order));
+
+      navigate(`/order/${data.order.number}`);
+    } catch (err) {
+      console.error('Ошибка при создании заказа:', err);
+    } finally {
+      setOrderRequest(false);
+    }
   };
 
   const closeOrderModal = () => {
-    dispatch(clearOrder()); // очистка orderModalData
+    setOrderModalData(null);
+    dispatch(clearOrder());
   };
 
   const price = useMemo(
@@ -55,7 +67,7 @@ export const BurgerConstructor: FC = () => {
       price={price}
       orderRequest={orderRequest}
       constructorItems={{ bun, ingredients }}
-      orderModalData={null}
+      orderModalData={orderModalData}
       onOrderClick={onOrderClick}
       closeOrderModal={closeOrderModal}
     />
