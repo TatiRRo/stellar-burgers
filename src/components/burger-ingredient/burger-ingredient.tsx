@@ -20,19 +20,17 @@ export const BurgerIngredient: FC<TBurgerIngredientProps> = memo(
 
     const count = useMemo(() => {
       if (ingredient.type === 'bun') {
-        return bun && bun._id === ingredient._id ? 1 : 0;
+        return bun && bun._id === ingredient._id ? 2 : 0;
       }
       return ingredients.filter((i) => i._id === ingredient._id).length;
     }, [bun, ingredients, ingredient]);
 
     const handleAdd = () => {
       const uid = uuidv4();
-      const id = (ingredient as any).id ?? uid;
 
       const ingredientWithUid: TConstructorIngredient = {
-        ...(ingredient as TConstructorIngredient),
-        uid,
-        id
+        ...ingredient,
+        uid
       };
 
       if (ingredient.type === 'bun') {

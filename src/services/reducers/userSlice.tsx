@@ -4,6 +4,7 @@ import { TUser } from '../../utils/types';
 
 type UserState = {
   user: TUser | null;
+  isAuthenticated: boolean;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   updateStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
@@ -12,6 +13,7 @@ type UserState = {
 
 const initialState: UserState = {
   user: null,
+  isAuthenticated: false,
   status: 'idle',
   updateStatus: 'idle',
   error: null,
@@ -53,6 +55,7 @@ const userSlice = createSlice({
   reducers: {
     clearUser(state) {
       state.user = null;
+      state.isAuthenticated = false;
       state.status = 'idle';
       state.updateStatus = 'idle';
       state.error = null;
@@ -68,11 +71,13 @@ const userSlice = createSlice({
       .addCase(getUser.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.user = action.payload;
+        state.isAuthenticated = true;
       })
       .addCase(getUser.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload || 'Неизвестная ошибка';
         state.user = null;
+        state.isAuthenticated = false;
       })
 
       .addCase(updateUser.pending, (state) => {

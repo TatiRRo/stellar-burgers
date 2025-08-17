@@ -1,18 +1,17 @@
 import { FC, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { TConstructorIngredient } from '@utils-types';
+import { TConstructorIngredient, TOrder } from '@utils-types';
 import { BurgerConstructorUI } from '@ui';
 import { useAppSelector } from '../../services/hooks/hooks';
 import { addOrder, clearOrder } from '../../services/reducers/ordersSlice';
 import { orderBurgerApi } from '../../utils/burger-api';
-import { TOrder } from '@utils-types';
-import { getCookie } from '../../../src/utils/cookie';
 
 export const BurgerConstructor: FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const isAuthenticated = (): boolean => !!getCookie('accessToken');
+
+  const isAuthenticated = useAppSelector((state) => state.user.isAuthenticated);
 
   const bun = useAppSelector((state) => state.burgerConstructor?.bun ?? null);
   const ingredients = useAppSelector(
@@ -23,7 +22,7 @@ export const BurgerConstructor: FC = () => {
   const [orderModalData, setOrderModalData] = useState<TOrder | null>(null);
 
   const onOrderClick = async () => {
-    if (!isAuthenticated()) {
+    if (!isAuthenticated) {
       navigate('/login');
       return;
     }
