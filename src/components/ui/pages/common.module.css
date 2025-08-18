@@ -7,7 +7,7 @@
 }
 
 .wrapCenter {
-  margin: auto;
+  margin: 140px auto;
   width: 480px;
   display: flex;
   flex-direction: column;
